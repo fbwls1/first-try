@@ -1,44 +1,84 @@
 #자판기 만들기
-#관리자 모드 -> 
-#판매 모드 -> 돈 투입 - 돈 액수 확인 - 출력 가능한 물건 선별, 제시 - 물건 선택 - 물건 출력
-#물건 -> 가격, 재고, 구입시 금액 지불과 재고 하나 소진,
-class production:
-    def __init__(self, price, amount):
+
+#자판기 생성시 필요한 물건들 모두 객체화(상품, 돈, 메뉴 등) -> 그 대상의 연산이 쉬워짐.
+class production: #자판기에 진열되는 상품
+    def __init__(self, name, price, amount):
+        self.name = name
         self.price = price
         self.amount = amount
-        
+
+    def getName(self):
+        return self.name
+
     def getPrice(self):
         return self.price
-    
-    def getAmout(self):
-        return self.amount
 
-    #클래스에서는 객체 변수의 변화에만 집중. 전역 변수나 다른 과정은 구현 과정에서 따로 제작
-    #다른 변수나 시스템과의 관계는 메모해서 구현에 이용.
-    def purchase(self, num):
+    def getAmout(self):
+        return self.amounts #객체 변수에 대한 get 함수 필수!
+
+    def purchase(self, num): # 돈 객체가 생김에 따라 변경 필요!
         if(money >= self.price * num):
             money -= self.price * num
             self.amount -= num
 
+class money: #투입, 반환, 저장되는 돈
+    def __init__(self):
+        self.total = 0
 
-income = 0
-money = 0
+    def getTotal(self):
+        return self.total
+
+    def Input(self, amount):
+        self.total += amount
+
+    def Output(self, amount):
+        self.total -= amount
+
+class menu: #상품을 모아놓고 보여주는 메뉴(상품의 리스트)
+    def __init__(self):
+        self.list = []
+        
+    def getList(self):
+        return self.list
+    
+    def getName(self, i): #리스트 속 상품의 변수 얻기 쉽도록 오버로딩
+        self.list[i].getName()
+        
+    def getPrice(self, i):
+        self.list[i].getPrice()
+        
+    def getAmount(self, i):
+        self.list[i].getAmount()
+    
+    def add(self, production): #메뉴에 상품 추가, 삭제
+        self.list.append(production)
+
+    def remove(self, production):
+        self.list.remove(production)
+        
+    def showList(self): #객체인 상품 속 변수들을 get함수로 출력
+        for i in range(len(self.list)):
+            print("{} : 가격 : {}원, 재고, {}개\n".format(self.getName(i), self.getPrice(i), self.getAmount(i)))
+
+income = money()
+payment = money()
 frontmenu = {}
-menu = {}
+menu = menu()
 
 def menucorrection(name, price, amount):
     menu[name] = production(price, amount)
     frontmenu[name] = [menu[name].getPrice(), menu[name].getAmout()]
 
 while(True):
+    mod = True # mod가 True면 관리자 모드, False면 판매 모드
     #편집 모드
-    while(True):
+    while(mod):
         print("관리자 모드.\n")
-        choice = int(input("원하시는 메뉴를 선택해 주세요. 1. 잔액 회수, 2. 메뉴 편집, 3. 판매 모드\n"))
+        choice = int(input("원하시는 메뉴를 선택해 주세요. 1. 수입 회수, 2. 메뉴 편집, 3. 판매 모드\n"))
         
         if(choice == 1):
-            income += money
-            money = 0
+            income.Input(money.getTotal())
+            payment.Output(money.getTotal())
             print("잔액이 회수되었습니다.")
         
         elif(choice == 2):
@@ -47,16 +87,10 @@ while(True):
             choice = int(input())
             
             if(choice == 1):
-                print("추가하고 싶은 상품의 이름, 가격, 수량을 차례대로 입력해주세요.")
-                name = input()
-                price = int(input())
-                amount = int(input())
-                menucorrection(name, price, amount)
+                prod1 = input("추가하고 싶은 상품의 이름, 가격, 수량을 차례대로 입력해주세요.")
+                menu.add(prod1) #깊은 복사 얕은 복사 고민 필요!
                 print("상품이 추가되었습니다.\n")
-                print("현재 메뉴 : {}".format(frontmenu))
-                del name
-                del price
-                del amount
+                menu.showList()
                 
             elif(choice == 2):
                 name = input("삭제하고 싶은 상품의 이름을 입력해주세요.")
@@ -81,9 +115,10 @@ while(True):
                 print("현재 메뉴 : {}".format(frontmenu))
                 
         elif(choice == 3):
-            break
+            mod = False
             
 
 #판매 모드
-    while(True):
+    while(not mod):
         Input = input(int("구입을 원하시면 아래의 구멍에 돈을 넣어주세요.\n"))
+        
